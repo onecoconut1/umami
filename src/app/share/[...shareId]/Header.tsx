@@ -1,3 +1,4 @@
+/* eslint-disable css-modules/no-unused-class */
 import { Icon, Text } from 'react-basics';
 import Link from 'next/link';
 import LanguageButton from 'components/input/LanguageButton';
@@ -10,11 +11,11 @@ export function Header() {
   return (
     <header className={styles.header}>
       <div>
-        <Link href="https://umami.is" target="_blank" className={styles.title}>
+        <Link href="https://renoplatforms.com" target="_blank" className={styles.title}>
           <Icon size="lg">
             <Icons.Logo />
           </Icon>
-          <Text>umami</Text>
+          <Text>Reno Analytics</Text>
         </Link>
       </div>
       <div className={styles.buttons}>
