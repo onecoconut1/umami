@@ -34,49 +34,53 @@ export default async (
   req: NextApiRequestQueryBody<WebsitesRequestQuery, WebsitesRequestBody>,
   res: NextApiResponse,
 ) => {
-  await useCors(req, res);
-  await useAuth(req, res);
-  await useValidate(schema, req, res);
+  try {
+    await useCors(req, res);
+    await useAuth(req, res);
+    await useValidate(schema, req, res);
 
-  const {
-    user: { id: userId },
-  } = req.auth;
+    const {
+      user: { id: userId },
+    } = req.auth;
 
-  if (req.method === 'GET') {
-    if (!req.query.userId) {
-      req.query.userId = userId;
+    if (req.method === 'GET') {
+      if (!req.query.userId) {
+        req.query.userId = userId;
+      }
+
+      return userWebsitesRoute(req, res);
     }
 
-    return userWebsitesRoute(req, res);
+    if (req.method === 'POST') {
+      const { name, domain, shareId, teamId } = req.body;
+
+      if (
+        (teamId && !(await canCreateTeamWebsite(req.auth, teamId))) ||
+        !(await canCreateWebsite(req.auth))
+      ) {
+        return unauthorized(res);
+      }
+
+      const data: any = {
+        id: uuid(),
+        createdBy: userId,
+        name,
+        domain,
+        shareId,
+        teamId,
+      };
+
+      if (!teamId) {
+        data.userId = userId;
+      }
+
+      const website = await createWebsite(data);
+
+      return ok(res, website);
+    }
+
+    return methodNotAllowed(res);
+  } catch (error) {
+    return res.status(500).json({ error });
   }
-
-  if (req.method === 'POST') {
-    const { name, domain, shareId, teamId } = req.body;
-
-    if (
-      (teamId && !(await canCreateTeamWebsite(req.auth, teamId))) ||
-      !(await canCreateWebsite(req.auth))
-    ) {
-      return unauthorized(res);
-    }
-
-    const data: any = {
-      id: uuid(),
-      createdBy: userId,
-      name,
-      domain,
-      shareId,
-      teamId,
-    };
-
-    if (!teamId) {
-      data.userId = userId;
-    }
-
-    const website = await createWebsite(data);
-
-    return ok(res, website);
-  }
-
-  return methodNotAllowed(res);
 };
